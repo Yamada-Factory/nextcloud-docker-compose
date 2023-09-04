@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  app:
+    image: nextcloud:fpm-alpine
+    restart: always
+    volumes:
+      - /root/share/data/nc-data:/var/www/data
+      - ./data:/var/www/html
+      - ./conf/php.ini:/usr/local/etc/php/php.ini
+        # - ./conf/php-fpm/docker.conf:/usr/local/etc/php-fpm.d/docker.conf
+    environment:
+      - NEXTCLOUD_DATA_DIR=/var/www/data
+      - PHP_MEMORY_LIMIT=5G
+      - PHP_UPLOAD_LIMIT=5G
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+    env_file:
+      - db.env
+    depends_on:
+      - db
+      - redis
+  redis:
+    image: redis:alpine
+    restart: always
+
+  db:
+    image: mariadb:10.5
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - ./mysql:/var/lib/mysql
+    env_file:
+      - db.env
+  web:
+    image: nginx
+    restart: always
+    ports:
+      - 8080:80
+    links:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes_from:
+      - app
+
+  cron:
+    image: nextcloud:fpm-alpine
+    restart: always
+    volumes:
+      - /root/share/data/nc-data:/var/www/data
+      - ./data:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+      - redis
