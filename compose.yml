@@ -20,6 +20,7 @@ services:
     depends_on:
       - db
       - redis
+
   redis:
     image: redis:alpine
     restart: always
@@ -32,6 +33,7 @@ services:
       - ./mysql:/var/lib/mysql
     env_file:
       - db.env
+
   web:
     image: nginx
     restart: always
@@ -40,7 +42,7 @@ services:
     links:
       - app
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
     volumes_from:
       - app
 
