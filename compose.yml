@@ -5,10 +5,10 @@ services:
     image: nextcloud:fpm-alpine
     restart: always
     volumes:
-      - /root/share/data/nc-data:/var/www/data
-      - ./data:/var/www/html
-      - ./conf/php.ini:/usr/local/etc/php/php.ini
-        # - ./conf/php-fpm/docker.conf:/usr/local/etc/php-fpm.d/docker.conf
+      - ./docker/nextcloud/nc-data:/var/www/data
+      - ./docker/nextcloud/html:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php-fpm/zzz-docker.conf:/usr/local/etc/php-fpm.d/zzz-docker.conf
     environment:
       - NEXTCLOUD_DATA_DIR=/var/www/data
       - PHP_MEMORY_LIMIT=5G
@@ -17,10 +17,10 @@ services:
       - REDIS_HOST=redis
     env_file:
       - db.env
+      - s3.env    # デフォルトでS3を使う時の。使わない場合はコメントアウト
     depends_on:
       - db
       - redis
-
   redis:
     image: redis:alpine
     restart: always
@@ -30,10 +30,11 @@ services:
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     restart: always
     volumes:
-      - ./mysql:/var/lib/mysql
+      - ./docker/mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=Pa55W0rd
     env_file:
       - db.env
-
   web:
     image: nginx
     restart: always
@@ -42,7 +43,7 @@ services:
     links:
       - app
     volumes:
-      - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     volumes_from:
       - app
 
@@ -50,8 +51,8 @@ services:
     image: nextcloud:fpm-alpine
     restart: always
     volumes:
-      - /root/share/data/nc-data:/var/www/data
-      - ./data:/var/www/html
+      - ./docker/nextcloud/data:/var/www/data
+      - ./docker/nextcloud/html:/var/www/html
     entrypoint: /cron.sh
     depends_on:
       - db
