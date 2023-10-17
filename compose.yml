@@ -13,7 +13,6 @@ services:
       - NEXTCLOUD_DATA_DIR=/var/www/data
       - PHP_MEMORY_LIMIT=5G
       - PHP_UPLOAD_LIMIT=5G
-      - MYSQL_HOST=db
       - REDIS_HOST=redis
     env_file:
       - db.env
